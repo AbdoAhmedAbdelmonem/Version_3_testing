@@ -719,10 +719,10 @@ This project is proprietary software. All rights reserved © 2025 Chameleon FCDS
 
 ## 📈 Stats
 
-![Total Users](https://img.shields.io/badge/Users-5000%2B-blue)
+![Total Users](https://img.shields.io/badge/Users-3800%2B-blue)
 ![Quizzes](https://img.shields.io/badge/Quizzes-140%2B-green)
 ![Courses](https://img.shields.io/badge/Courses-200%2B-orange)
-![Solved Quizzes](https://img.shields.io/badge/Solved-30K%2B-purple)
+![Solved Quizzes](https://img.shields.io/badge/Solved-48K%2B-purple)
 
 ---
 
