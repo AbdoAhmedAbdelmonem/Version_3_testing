@@ -1,22 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Cairo, Amiri, Rubik } from "next/font/google" // ✅ استدعاء Rubik
+import { Rubik } from "next/font/google"
 import "../globals.css"
 
-const cairo = Cairo({
-  subsets: ["arabic"],
-  display: "swap",
-  variable: "--font-cairo",
-})
-
-const amiri = Amiri({
-  subsets: ["arabic"],
-  weight: ["400", "700"],
-  display: "swap",
-  variable: "--font-amiri",
-})
-
-// ✅ تعريف Rubik
 const rubik = Rubik({
   subsets: ["arabic", "latin"],
   weight: ["400", "500", "700"],

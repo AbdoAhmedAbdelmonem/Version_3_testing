@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Mono, Rubik, Outfit, Rock_Salt, Cairo, Noto_Sans_Arabic } from "next/font/google";
+import { Rubik, Outfit, Rock_Salt, Cairo, Noto_Sans_Arabic } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { ToastProvider } from "@/components/ToastProvider";
@@ -9,18 +9,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ColorThemeProvider } from "@/components/color-theme-provider";
 import Navigation from "@/components/navigation";
 import SmoothScrollProvider from "@/components/SmoothScrollProvider";
-
-// Inter as Geist Sans replacement
-const geistSans = Inter({
-  subsets: ["latin"],
-  variable: "--font-geist-sans",
-});
-
-// Roboto Mono as Geist Mono replacement
-const geistMono = Roboto_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-});
 
 // Rubik font
 const rubik = Rubik({
@@ -105,7 +93,7 @@ export default function RootLayout({
       </head>
 
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${rubik.variable} ${outfit.variable} ${cairo.variable} ${notoSansArabic.variable} ${rockSalt.variable} antialiased font-sans ${
+        className={`${rubik.variable} ${outfit.variable} ${cairo.variable} ${notoSansArabic.variable} ${rockSalt.variable} antialiased font-sans ${
           !ENABLE_ADS ? "hide-all-ads" : ""
         }`}
       >

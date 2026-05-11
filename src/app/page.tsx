@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { motion, useScroll, useTransform, useSpring } from "framer-motion"
+import { motion, useScroll, useTransform } from "framer-motion"
 import ScrollAnimatedSection from "@/components/scroll-animated-section"
-import Script from "next/script"
 import {
   Check,
   ArrowRight,

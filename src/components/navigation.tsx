@@ -95,7 +95,7 @@ export default function Navigation() {
     }
     checkSession()
 
-    // Clock and Format Logic
+    // Clock settings
     const savedFormat = localStorage.getItem('chameleon_time_format') as '12h' | '24h'
     if (savedFormat) setTimeFormat(savedFormat)
     
@@ -105,9 +105,13 @@ export default function Navigation() {
     const savedDate = localStorage.getItem('chameleon_show_date')
     if (savedDate !== null) setShowDate(savedDate === 'true')
 
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
+    let timer: ReturnType<typeof setInterval> | null = null
+    const isMobileViewport = window.matchMedia("(max-width: 767px)").matches
+    if (isMobileViewport) {
+      timer = setInterval(() => {
+        setCurrentTime(new Date())
+      }, 1000)
+    }
 
     // Sync with other tabs/components
     const handleStorageChange = (e: StorageEvent) => {
@@ -120,9 +124,9 @@ export default function Navigation() {
     return () => {
       window.removeEventListener("scroll", handleScroll)
       window.removeEventListener('storage', handleStorageChange)
-      clearInterval(timer)
+      if (timer) clearInterval(timer)
     }
-  }, [timeFormat])
+  }, [])
 
   // Handle clicks outside the specializations menu
   useEffect(() => {
