@@ -73,6 +73,7 @@ export default function Navigation() {
   ]
 
   const scrollThrottled = useRef(false)
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -95,15 +96,17 @@ export default function Navigation() {
     }
     checkSession()
 
-    // Clock and Format Logic
-    const savedFormat = localStorage.getItem('chameleon_time_format') as '12h' | '24h'
-    if (savedFormat) setTimeFormat(savedFormat)
-    
-    const savedSeconds = localStorage.getItem('chameleon_show_seconds')
-    if (savedSeconds !== null) setShowSeconds(savedSeconds === 'true')
-    
-    const savedDate = localStorage.getItem('chameleon_show_date')
-    if (savedDate !== null) setShowDate(savedDate === 'true')
+    // Clock and Format Logic (run once)
+    try {
+      const savedFormat = localStorage.getItem('chameleon_time_format') as '12h' | '24h'
+      if (savedFormat) setTimeFormat(savedFormat)
+      const savedSeconds = localStorage.getItem('chameleon_show_seconds')
+      if (savedSeconds !== null) setShowSeconds(savedSeconds === 'true')
+      const savedDate = localStorage.getItem('chameleon_show_date')
+      if (savedDate !== null) setShowDate(savedDate === 'true')
+    } catch (e) {
+      // ignore (server-side or restricted storage)
+    }
 
     const timer = setInterval(() => {
       setCurrentTime(new Date())
@@ -122,7 +125,27 @@ export default function Navigation() {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(timer)
     }
-  }, [timeFormat])
+  }, [])
+
+  // Close mobile menu when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!isOpen) return
+    const handleOutside = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(target)) {
+        setIsOpen(false)
+      }
+    }
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
+    document.addEventListener('mousedown', handleOutside)
+    document.addEventListener('keydown', handleEsc)
+    return () => {
+      document.removeEventListener('mousedown', handleOutside)
+      document.removeEventListener('keydown', handleEsc)
+    }
+  }, [isOpen])
 
   // Handle clicks outside the specializations menu
   useEffect(() => {
@@ -267,7 +290,7 @@ export default function Navigation() {
                                     key={spec.name}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: specIndex * 0.1 }}
+                                    transition={{ duration: 0.12 }}
                                   >
                                     <Link
                                       href={spec.href}
@@ -332,10 +355,10 @@ export default function Navigation() {
             {/* Auth Buttons or User Profile */}
             <div className="hidden md:flex items-center gap-4">
               {user ? (
-                <motion.div 
+                  <motion.div 
                   initial={{ opacity: 0, x: 20 }} 
                   animate={{ opacity: 1, x: 0 }} 
-                  transition={{ delay: 0.6 }}
+                  transition={{ duration: 0.15 }}
                   className="flex items-center gap-4"
                 >
                   <NotificationBell />
@@ -382,7 +405,7 @@ export default function Navigation() {
                 </motion.div>
               ) : (
                 <>
-                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.15 }}>
                     <Link href="/auth/signin">
                       <Button
                         variant="ghost"
@@ -393,7 +416,7 @@ export default function Navigation() {
                       </Button>
                     </Link>
                   </motion.div>
-                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 }}>
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.15 }}>
                     <Link href="/auth/signup">
                       <Button className="bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-lg transition-all duration-300">
                         <UserPlus className="w-4 h-4 mr-2" />
@@ -488,7 +511,7 @@ export default function Navigation() {
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
+                transition={{ duration: 0.12 }}
                 onClick={() => setIsOpen(!isOpen)}
                 className=" p-1.5 hover:bg-muted rounded-lg transition-colors duration-300"
               >
@@ -528,6 +551,7 @@ export default function Navigation() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
+              ref={(el) => (mobileMenuRef.current = el)}
               className="absolute pointer-events-auto mt-4 top-full left-0 right-0 md:hidden overflow-hidden rounded-[2rem] border border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl animate-in fade-in zoom-in duration-300 z-[100]"
             >
               <div className="container mx-auto px-4 py-6">
@@ -537,7 +561,7 @@ export default function Navigation() {
                       key={item.name}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ duration: 0.12 }}
                     >
                       {item.name === "Specializations" ? (
                         <div>
@@ -572,7 +596,7 @@ export default function Navigation() {
                                     key={spec.name}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: specIndex * 0.1 }}
+                                    transition={{ duration: 0.12 }}
                                   >
                                     <Link
                                       href={spec.href}
@@ -600,6 +624,7 @@ export default function Navigation() {
                           href={item.href}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={() => setIsOpen(false)}
                           className="flex items-center gap-3 text-foreground/70 hover: p-3 rounded-lg hover:bg-muted transition-all duration-300"
                         >
                           <item.icon className="w-5 h-5" />
@@ -608,7 +633,10 @@ export default function Navigation() {
                       ) : (
                         <Link
                           href={item.href}
-                          onClick={(e) => handleNavigation(e, item)}
+                          onClick={(e) => {
+                            handleNavigation(e, item)
+                            setIsOpen(false)
+                          }}
                           className="flex items-center gap-3 text-foreground/70 hover: p-3 rounded-lg hover:bg-muted transition-all duration-300"
                         >
                           <item.icon className="w-5 h-5" />
