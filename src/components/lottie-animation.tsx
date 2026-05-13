@@ -1,10 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-<<<<<<< HEAD
-=======
 import Script from "next/script"
->>>>>>> 16d5d685 (Performance optimizations)
 import { cn } from "@/lib/utils"
 
 interface LottieAnimationProps {
@@ -54,20 +51,6 @@ export default function LottieAnimation({
   }
 
   return (
-<<<<<<< HEAD
-    <div className={cn("relative overflow-hidden", className)} style={{ width, height }}>
-      <dotlottie-player
-        src={proxiedSrc}
-        background={background}
-        speed={speed}
-        renderer={renderer}
-        style={{ width, height }}
-        {...(loop ? { loop: true } : {})}
-        {...(autoplay && !playOnHover ? { autoplay: true } : {})}
-        {...(playOnHover ? { interactMode: "hover" } : {})}
-      />
-    </div>
-=======
     <>
       <Script 
         src="https://cdn.jsdelivr.net/npm/@dotlottie/player-component@2.7.12/dist/dotlottie-player.js" 
@@ -86,6 +69,5 @@ export default function LottieAnimation({
         />
       </div>
     </>
->>>>>>> 16d5d685 (Performance optimizations)
   )
 }
