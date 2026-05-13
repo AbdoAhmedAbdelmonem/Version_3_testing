@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { motion, useScroll, useTransform, useSpring } from "framer-motion"
-
 import dynamic from "next/dynamic"
 
 const ScrollAnimatedSection = dynamic(() => import("@/components/scroll-animated-section"), { ssr: true })
@@ -35,12 +34,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-
 const MagicSearch = dynamic(() => import("@/components/magic-search"), { ssr: false, loading: () => <div className="h-[52px] w-[300px] sm:w-[400px] bg-muted animate-pulse rounded-full border border-border" /> })
 import { getStudentSession } from "@/lib/auth"
 import { formatTAName } from "@/lib/ta-utils"
 import Image from "next/image"
->>>>>>> 16d5d685 (Performance optimizations)
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { useTheme } from "next-themes"
 
