@@ -33,11 +33,7 @@ export default function Navigation() {
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [isSpecializationsOpen, setIsSpecializationsOpen] = useState(false)
-  const [isIslandExpanded, setIsIslandExpanded] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h')
-  const [showSeconds, setShowSeconds] = useState<boolean>(true)
-  const [showDate, setShowDate] = useState<boolean>(true)
+  // removed dynamic clock/island for performance
 
   const specializations = [
     {
@@ -96,34 +92,11 @@ export default function Navigation() {
     }
     checkSession()
 
-    // Clock and Format Logic (run once)
-    try {
-      const savedFormat = localStorage.getItem('chameleon_time_format') as '12h' | '24h'
-      if (savedFormat) setTimeFormat(savedFormat)
-      const savedSeconds = localStorage.getItem('chameleon_show_seconds')
-      if (savedSeconds !== null) setShowSeconds(savedSeconds === 'true')
-      const savedDate = localStorage.getItem('chameleon_show_date')
-      if (savedDate !== null) setShowDate(savedDate === 'true')
-    } catch (e) {
-      // ignore (server-side or restricted storage)
-    }
-
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-
-    // Sync with other tabs/components
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'chameleon_time_format') setTimeFormat(e.newValue as '12h' | '24h')
-      if (e.key === 'chameleon_show_seconds') setShowSeconds(e.newValue === 'true')
-      if (e.key === 'chameleon_show_date') setShowDate(e.newValue === 'true')
-    }
-    window.addEventListener('storage', handleStorageChange)
+    // removed clock/timer logic to avoid frequent re-renders
 
     return () => {
       window.removeEventListener("scroll", handleScroll)
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(timer)
+      // nothing extra to clean up for clock
     }
   }, [])
 
@@ -430,89 +403,13 @@ export default function Navigation() {
 
             {/* Mobile Actions & Dynamic Island */}
             <div className="md:hidden flex items-center gap-1.5 z-50">
-              {/* Dynamic Island (Compact & Side-aligned) */}
-              <motion.div
-                layout
-                onClick={() => setIsIslandExpanded(!isIslandExpanded)}
-                initial={{ borderRadius: 20 }}
-                animate={{
-                  width: isIslandExpanded ? (showDate ? 200 : 180) : (showSeconds ? (showDate ? 130 : 85) : (showDate ? 115 : 75)),
-                  height: isIslandExpanded ? (showDate ? 75 : 60) : 28,
-                  borderRadius: isIslandExpanded ? 14 : 20,
-                  backgroundColor: "rgba(0,0,0,0.9)"
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                className="text-white shadow-xl border border-white/10 cursor-pointer overflow-hidden flex flex-col items-center justify-center relative"
-              >
-                {/* Collapsed State */}
-                {!isIslandExpanded && (
-                  <motion.div 
-                    layoutId="island-content"
-                    className="flex items-center gap-1 px-2"
-                  >
-                    <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono tracking-tighter" suppressHydrationWarning>
-                      {currentTime.toLocaleTimeString('en-US', {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        second: showSeconds ? '2-digit' : undefined,
-                        hour12: timeFormat === '12h'
-                      })}
-                    </span>
-                    {showDate && (
-                      <span className="text-[9px] font-medium opacity-60 ml-0.5 border-l border-white/20 pl-1" suppressHydrationWarning>
-                        {currentTime.toLocaleDateString('en-US', {
-                          weekday: 'short',
-                        })}
-                      </span>
-                    )}
-                  </motion.div>
-                )}
-
-                {/* Expanded State */}
-                <AnimatePresence>
-                  {isIslandExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      className="w-full h-full flex flex-col items-center justify-center p-1.5"
-                    >
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <Activity className="size-2.5 text-primary animate-pulse" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">Live</span>
-                      </div>
-                      <span className="text-xs font-black font-mono" suppressHydrationWarning>
-                        {currentTime.toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          second: showSeconds ? '2-digit' : undefined,
-                          hour12: timeFormat === '12h'
-                        })}
-                      </span>
-                      {showDate && (
-                        <motion.span 
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 0.8 }}
-                          className="text-[9px] font-bold mt-0.5 text-primary"
-                        >
-                          {currentTime.toLocaleDateString('en-US', {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
-                        </motion.span>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+              {/* removed dynamic clock/island for performance */}
               {user && <NotificationBell />}
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.12 }}
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => (isOpen ? setIsOpen(false) : setIsOpen(true))}
                 className=" p-1.5 hover:bg-muted rounded-lg transition-colors duration-300"
               >
                 <AnimatePresence mode="wait">
@@ -523,6 +420,10 @@ export default function Navigation() {
                       animate={{ rotate: 0, opacity: 1 }}
                       exit={{ rotate: 90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        setIsOpen(false)
+                      }}
                     >
                       <X className="w-6 h-6" />
                     </motion.div>
@@ -533,6 +434,10 @@ export default function Navigation() {
                       animate={{ rotate: 0, opacity: 1 }}
                       exit={{ rotate: -90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        setIsOpen(true)
+                      }}
                     >
                       <Menu className="w-6 h-6" />
                     </motion.div>
@@ -547,12 +452,13 @@ export default function Navigation() {
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
+              initial={{ opacity: 0, scaleY: 0 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              exit={{ opacity: 0, scaleY: 0 }}
+              transition={{ duration: 0.18, ease: [0.22, 0.9, 0.25, 1] }}
+              style={{ transformOrigin: 'top' }}
               ref={(el) => (mobileMenuRef.current = el)}
-              className="absolute pointer-events-auto mt-4 top-full left-0 right-0 md:hidden overflow-hidden rounded-[2rem] border border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl animate-in fade-in zoom-in duration-300 z-[100]"
+              className="absolute pointer-events-auto mt-4 top-full left-0 right-0 md:hidden overflow-hidden rounded-[2rem] border border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl z-[100] will-change-transform will-change-opacity"
             >
               <div className="container mx-auto px-4 py-6">
                 <div className="flex flex-col gap-4">
