@@ -19,6 +19,18 @@ export default function AnimatedParticles() {
   const animationFrameRef = useRef<number>()
 
   useEffect(() => {
+    // Early exit on low-end devices or when user prefers reduced motion
+    try {
+      const isMobile = window.matchMedia("(max-width: 768px)").matches
+      const hardwareConcurrency = navigator.hardwareConcurrency || 4
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (isMobile || hardwareConcurrency < 4 || prefersReducedMotion) {
+        return
+      }
+    } catch (e) {
+      // If any check fails, continue with default behavior
+    }
+
     const canvas = canvasRef.current
     if (!canvas) return
 
