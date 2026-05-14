@@ -6,15 +6,14 @@ import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import { Moon, Sun, Menu, X, LogIn, UserPlus, BookOpen, BrainCircuit, SquareUserRound, LogOut, Home, HelpCircle, ChevronDown, Lock, Gamepad2, ClipboardList, ShoppingBag } from "lucide-react"
+import { Moon, Sun, Menu, X, LogIn, UserPlus, BrainCircuit, SquareUserRound, LogOut, Home, HelpCircle, ChevronDown, ShoppingBag } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { getStudentSession } from "@/lib/auth"
 import { formatTAName } from "@/lib/ta-utils"
 import { createBrowserClient } from "@/lib/supabase/client"
 import { NotificationBell } from "./notification-bell"
-import { ThemeSwitcher } from "./theme-switcher"
-import { Zap, Clock as ClockIcon, Activity, Calendar } from "lucide-react"
+// ThemeSwitcher and extra icons removed (not used here)
 import { User } from "@/lib/types"
 import { useTheme } from "next-themes"
 
@@ -70,6 +69,7 @@ export default function Navigation() {
 
   const scrollThrottled = useRef(false)
   const mobileMenuRef = useRef<HTMLDivElement | null>(null)
+  const savedScrollY = useRef<number | null>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -146,17 +146,57 @@ export default function Navigation() {
     }
   }, [isSpecializationsOpen])
 
-  // Disable background scrolling when the mobile menu is open
+  // Disable background scrolling while mobile menu is open (preserve scroll position)
   useEffect(() => {
-    if (typeof document === 'undefined') return
-    const original = document.body.style.overflow
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = original
+      savedScrollY.current = window.scrollY
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${savedScrollY.current}px`
+      document.body.style.left = '0'
+      document.body.style.right = '0'
+      document.documentElement.style.overflow = 'hidden'
+    } else {
+      if (savedScrollY.current !== null) {
+        const y = savedScrollY.current
+        document.body.style.position = ''
+        document.body.style.top = ''
+        document.body.style.left = ''
+        document.body.style.right = ''
+        document.documentElement.style.overflow = ''
+        window.scrollTo(0, y)
+        savedScrollY.current = null
+      } else {
+        document.documentElement.style.overflow = ''
       }
     }
-    return
+
+    return () => {
+      // ensure cleanup on unmount
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [isOpen])
+
+  // Close menus when route changes (or on large resizes)
+  useEffect(() => {
+    // close mobile and dropdown menus when pathname changes
+    setIsOpen(false)
+    setIsSpecializationsOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isOpen) {
+        setIsOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [isOpen])
 
   const handleLogout = async () => {
@@ -206,15 +246,14 @@ export default function Navigation() {
             <div className="flex items-center justify-between h-full">
               {/* Logo */}
               <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-3">
-              <div style={{ borderRadius: "50%", backgroundColor: "var(--primary)" }}>
+              <div className="rounded-full bg-primary">
               <div className="relative">
                 <Image
                   src="/images/chameleon.png"
                   alt="Logo"
                   width={40}
                   height={40}
-                  className="object-cover"
-                  style={{ borderRadius: "50%" }}
+                  className="object-cover rounded-full"
                 />
                 <motion.div
                   animate={{ rotate: 360 }}
@@ -225,70 +264,58 @@ export default function Navigation() {
               <span className="text-xl font-bold ">Chameleon</span>
             </motion.div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
-              {navItems.map((item, index) => (
+            {/* Desktop Navigation (merged from Morx header: motion nav for smooth, performant entrance) */}
+            <motion.nav
+              className="hidden md:flex items-center gap-8"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: "easeOut" }}
+            >
+              {navItems.map((item) => (
                 <motion.div
                   key={item.name}
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.18 }}
                 >
                   {item.name === "Specializations" ? (
                     <div className="relative">
                       <button
                         onClick={() => setIsSpecializationsOpen(!isSpecializationsOpen)}
-                        className="flex items-center gap-2 text-foreground/70 hover: transition-colors duration-300 group specializations-trigger"
+                        className="flex items-center gap-2 text-foreground/70 transition-colors duration-200 group specializations-trigger"
                       >
                         <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                         <span className="relative">
                           {item.name}
-                          <motion.div
+                          <motion.span
                             className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full"
                             initial={{ width: 0 }}
                             whileHover={{ width: "100%" }}
-                            transition={{ duration: 0.3 }}
+                            transition={{ duration: 0.28 }}
                           />
                         </span>
-                        <motion.div
-                          animate={{ rotate: isSpecializationsOpen ? 180 : 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
+                        <motion.div animate={{ rotate: isSpecializationsOpen ? 180 : 0 }} transition={{ duration: 0.18 }}>
                           <ChevronDown className="w-4 h-4" />
                         </motion.div>
                       </button>
 
-                      {/* Specializations Dropdown Menu */}
                       <AnimatePresence>
                         {isSpecializationsOpen && (
                           <motion.div
-                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            initial={{ opacity: 0, y: -6, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                            className="absolute top-full left-0 mt-2 w-80 bg-background border border-border rounded-lg shadow-2xl specializations-menu z-50"
+                            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                            transition={{ duration: 0.18 }}
+                            className="absolute top-full left-0 mt-2 w-80 max-h-[60vh] overflow-auto bg-background border border-border rounded-lg shadow-2xl specializations-menu z-50"
                           >
                             <div className="p-4">
                               <h3 className=" font-semibold mb-3 text-sm uppercase tracking-wide">Available Specializations</h3>
                               <div className="space-y-2">
-                                {specializations.map((spec, specIndex) => (
-                                  <motion.div
-                                    key={spec.name}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.12 }}
-                                  >
-                                    <Link
-                                      href={spec.href}
-                                      onClick={() => setIsSpecializationsOpen(false)}
-                                      className="block p-3 rounded-lg hover:bg-muted transition-colors duration-200 group"
-                                    >
-                                      <div className=" font-medium group-hover:text-primary transition-colors">
-                                        {spec.name}
-                                      </div>
-                                      <div className="text-muted-foreground text-sm mt-1">
-                                        {spec.description}
-                                      </div>
+                                {specializations.map((spec) => (
+                                  <motion.div key={spec.name} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.12 }}>
+                                    <Link href={spec.href} onClick={() => setIsSpecializationsOpen(false)} className="block p-3 rounded-lg hover:bg-muted transition-colors duration-200 group">
+                                      <div className=" font-medium group-hover:text-primary transition-colors">{spec.name}</div>
+                                      <div className="text-muted-foreground text-sm mt-1">{spec.description}</div>
                                     </Link>
                                   </motion.div>
                                 ))}
@@ -299,44 +326,19 @@ export default function Navigation() {
                       </AnimatePresence>
                     </div>
                   ) : item.name === "Explo" ? (
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-foreground/70 hover: transition-colors duration-300 group"
-                    >
+                    <a href={item.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-foreground/70 transition-colors duration-200 group">
                       <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="relative">
-                        {item.name}
-                        <motion.div
-                          className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                          initial={{ width: 0 }}
-                          whileHover={{ width: "100%" }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      </span>
+                      <span className="relative">{item.name}</span>
                     </a>
                   ) : (
-                    <Link
-                      href={item.href}
-                      onClick={(e) => handleNavigation(e, item)}
-                      className="flex items-center gap-2 text-foreground/70 hover: transition-colors duration-300 group"
-                    >
+                    <Link href={item.href} onClick={(e) => handleNavigation(e, item)} className="flex items-center gap-2 text-foreground/70 transition-colors duration-200 group">
                       <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="relative">
-                        {item.name}
-                        <motion.div
-                          className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full"
-                          initial={{ width: 0 }}
-                          whileHover={{ width: "100%" }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      </span>
+                      <span className="relative">{item.name}</span>
                     </Link>
                   )}
                 </motion.div>
               ))}
-            </div>
+            </motion.nav>
 
             {/* Auth Buttons or User Profile */}
             <div className="hidden md:flex items-center gap-4">
@@ -470,12 +472,12 @@ export default function Navigation() {
               exit={{ opacity: 0, scaleY: 0 }}
               transition={{ duration: 0.18, ease: [0.22, 0.9, 0.25, 1] }}
               style={{ transformOrigin: 'top' }}
-              ref={(el) => (mobileMenuRef.current = el)}
+              ref={(el) => { mobileMenuRef.current = el }}
               className="absolute pointer-events-auto mt-4 top-full left-0 right-0 md:hidden overflow-hidden rounded-[2rem] border border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl z-[100] will-change-transform will-change-opacity"
             >
               <div className="container mx-auto px-4 py-6">
                 <div className="flex flex-col gap-4">
-                  {navItems.map((item, index) => (
+                  {navItems.map((item) => (
                     <motion.div
                       key={item.name}
                       initial={{ opacity: 0, x: -20 }}
@@ -511,7 +513,7 @@ export default function Navigation() {
                                 className="ml-8 mt-2 space-y-2 max-h-[50vh] overflow-auto mobile-specializations-scroll"
                                 // limit height and allow internal scrolling on mobile
                               >
-                                {specializations.map((spec, specIndex) => (
+                                {specializations.map((spec) => (
                                   <motion.div
                                     key={spec.name}
                                     initial={{ opacity: 0, x: -20 }}
