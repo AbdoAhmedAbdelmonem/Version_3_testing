@@ -5,7 +5,6 @@ import { TextStreamChatTransport } from 'ai'
 import { Send, UploadCloud, BrainCircuit, FileText, Image as ImageIcon, Loader2, X } from 'lucide-react'
 import { useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
-import mammoth from 'mammoth'
 
 export default function AIPage() {
     const { messages, status, sendMessage } = useChat({
@@ -62,6 +61,7 @@ export default function AIPage() {
                 throw new Error("Text returned empty from PDF.")
             }
         } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            const mammoth = (await import('mammoth')).default
             const arrayBuffer = await file.arrayBuffer()
             const result = await mammoth.extractRawText({ arrayBuffer })
             textResult = `[DOCUMENT CONTEXT: ${file.name}]\n${result.value.substring(0, 3000)}...`
