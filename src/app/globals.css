@@ -362,6 +362,72 @@
   background: rgba(34, 197, 94, 0.7);
 }
 
+
+/* Performance overrides: reduce large blurs and disable heavy animations */
+:root {
+  --chameleon-reduced-blur: 24px;
+}
+
+/* Target Tailwind arbitrary blur sizes used across site */
+.blur-\[120px\], .blur-\[140px\] {
+  filter: blur(var(--chameleon-reduced-blur)) !important;
+}
+
+.blur-2xl, .blur-3xl, .md\:blur-3xl {
+  filter: blur(var(--chameleon-reduced-blur)) !important;
+}
+
+.backdrop-blur-xl, .md\:backdrop-blur-3xl, .backdrop-blur-3xl, .backdrop-blur-sm {
+  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Disable intense animations for users who prefer reduced motion and provide a global fallback */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .animate-pulse, .animate-bounce, .animate-spin {
+    animation: none !important;
+  }
+
+  .blur-\[120px\], .blur-\[140px\], .blur-2xl, .md\:blur-3xl {
+    filter: none !important;
+  }
+
+  .backdrop-blur-xl, .md\:backdrop-blur-3xl {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Global opt-out for animations (applies regardless of user preference) - keep commented by default
+:root.disable-animations * {
+  animation: none !important;
+  transition: none !important;
+  filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+*/
+
+/* Advanced Performance Optimizations */
+html.power-save-mode *, html.power-save-mode *::before, html.power-save-mode *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+html.no-glassmorphism * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
 .quiz-card {
   animation: fadeIn 0.3s ease-in-out;
 }
@@ -378,29 +444,29 @@
   }
 }
 
-/* Custom scrollbar for file list */
+/* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
   border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.5);
+  background: color-mix(in srgb, var(--primary) 50%, transparent);
   border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.7);
+  background: color-mix(in srgb, var(--primary) 80%, transparent);
 }
 
 /* Firefox scrollbar */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.5) rgba(255, 255, 255, 0.1);
+  scrollbar-color: color-mix(in srgb, var(--primary) 50%, transparent) color-mix(in srgb, var(--foreground) 10%, transparent);
 }
 
 /* GSAP Animation Performance Optimizations */
@@ -1180,21 +1246,181 @@ html.lenis-stopped body {
   height: 100vh !important;
 }
 
-/* AI Modal Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+/* Cleaned up duplicate AI Modal Custom Scrollbar */
+
+/* ═══════════════════════════════════════════════════════════════
+   PERF: CSS replacements for framer-motion (navigation + scroll)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Navigation entrance */
+@keyframes navEnter {
+  from { opacity: 0; transform: translateY(-30px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+.animate-nav-enter {
+  animation: navEnter 0.3s ease-out both;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(79, 70, 229, 0.2);
-  border-radius: 10px;
+
+/* Nav items entrance */
+@keyframes navItemsEnter {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 70, 229, 0.4);
+.animate-nav-items {
+  animation: navItemsEnter 0.28s ease-out both;
+  animation-delay: 0.05s;
 }
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(79, 70, 229, 0.2) transparent;
+
+/* Nav auth entrance */
+.animate-nav-auth {
+  animation: navItemsEnter 0.28s ease-out both;
+  animation-delay: 0.1s;
+}
+
+/* Dropdown enter */
+@keyframes dropdownEnter {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-dropdown-enter {
+  animation: dropdownEnter 0.18s ease-out both;
+}
+
+/* Mobile menu enter */
+@keyframes mobileMenuEnter {
+  from { opacity: 0; transform: scaleY(0); }
+  to   { opacity: 1; transform: scaleY(1); }
+}
+.animate-mobile-menu-enter {
+  transform-origin: top;
+  animation: mobileMenuEnter 0.18s cubic-bezier(0.22, 0.9, 0.25, 1) both;
+}
+
+/* Accordion/expand enter */
+@keyframes accordionEnter {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 500px; }
+}
+.animate-accordion-enter {
+  animation: accordionEnter 0.3s ease-out both;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PERF: Scroll-animated section CSS (replaces framer-motion)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Base state for all scroll animations — hidden */
+.scroll-anim-fade-in,
+.scroll-anim-slide-up,
+.scroll-anim-slide-down,
+.scroll-anim-slide-left,
+.scroll-anim-slide-right,
+.scroll-anim-slide-bottom,
+.scroll-anim-scale-in,
+.scroll-anim-rotate-in {
+  opacity: 0;
+  transition-property: opacity, transform;
+  transition-timing-function: cubic-bezier(0.25, 0.4, 0.25, 1);
+  /* duration and delay set inline by component */
+  transition-duration: 0.8s;
+}
+
+.scroll-anim-slide-up    { transform: translateY(50px); }
+.scroll-anim-slide-down  { transform: translateY(-50px); }
+.scroll-anim-slide-left  { transform: translateX(-80px); }
+.scroll-anim-slide-right { transform: translateX(80px); }
+.scroll-anim-slide-bottom{ transform: translateY(80px); }
+.scroll-anim-scale-in    { transform: scale(0.8); }
+.scroll-anim-rotate-in   { transform: rotate(-180deg) scale(0.5); }
+
+/* Visible state — triggered by IntersectionObserver */
+.scroll-anim-visible {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PERF: Notification modal CSS animations (replaces framer-motion)
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes notifBackdropEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-notif-backdrop-enter {
+  animation: notifBackdropEnter 0.3s ease-out both;
+}
+
+@keyframes notifModalEnter {
+  from { opacity: 0; transform: scale(0.9) translateY(30px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-notif-modal-enter {
+  animation: notifModalEnter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes notifItemEnter {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-notif-item-enter {
+  animation: notifItemEnter 0.3s ease-out both;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PERF: Spark progress bar CSS animations (replaces framer-motion)
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes sparkShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.animate-spark-shimmer {
+  animation: sparkShimmer 2s linear infinite;
+  animation-delay: 1s;
+}
+
+@keyframes sparkFloat {
+  0%, 100% { transform: translateY(-50%) scale(0) rotate(0deg); }
+  50%      { transform: translateY(calc(-50% - 20px)) scale(1) rotate(180deg); }
+}
+.animate-spark-float {
+  animation: sparkFloat 1.5s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+@keyframes sparkPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.2); }
+}
+.animate-spark-pulse {
+  animation: sparkPulse 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PERF: Mobile backdrop-blur elimination
+   GPU on mobile is 3-10x weaker than desktop.
+   backdrop-blur creates a compositing layer per element,
+   causing jank, dropped frames, and battery drain.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Also disable on devices that report low performance via reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
 }
