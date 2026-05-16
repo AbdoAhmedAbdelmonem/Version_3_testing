@@ -1,7 +1,7 @@
+// [PERF] Optimized: removed framer-motion — replaced with IntersectionObserver + CSS
 "use client"
 
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useRef, useEffect, useState } from 'react';
 
 interface BlurTextProps {
   text: string;
@@ -19,52 +19,41 @@ export function BlurText({
   direction = 'top',
 }: BlurTextProps) {
   const elements = animateBy === 'word' ? text.split(' ') : text.split('');
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const ref = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
 
-  const container = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.04,
-        delayChildren: delay / 1000,
-      }
-    }
-  };
-
-  const item = {
-    hidden: { 
-      opacity: 0, 
-      filter: 'blur(10px)', 
-      y: direction === 'top' ? -20 : 20 
-    },
-    visible: { 
-      opacity: 1, 
-      filter: 'blur(0px)', 
-      y: 0,
-      transition: { duration: 0.3, ease: 'easeOut' }
-    }
-  };
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.unobserve(el);
+        }
+      },
+      { rootMargin: '-50px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <motion.div
-      ref={ref}
-      variants={container}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-      className={className}
-    >
+    <div ref={ref} className={className}>
       {elements.map((element, index) => (
-        <motion.span
+        <span
           key={index}
-          variants={item}
-          className="inline-block mr-[0.25em]"
-          style={{ willChange: "transform, filter, opacity" }}
+          className="inline-block mr-[0.25em] transition-all duration-300 ease-out"
+          style={{
+            opacity: isInView ? 1 : 0,
+            filter: isInView ? 'blur(0px)' : 'blur(10px)',
+            transform: isInView ? 'translateY(0)' : `translateY(${direction === 'top' ? '-20px' : '20px'})`,
+            transitionDelay: `${delay + index * 40}ms`,
+          }}
         >
           {element}{animateBy === 'character' ? '' : ' '}
-        </motion.span>
+        </span>
       ))}
-    </motion.div>
+    </div>
   );
 }
